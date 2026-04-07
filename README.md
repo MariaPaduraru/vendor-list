@@ -42,7 +42,7 @@ The system uses the `VeridionID` as a bridge between messy input data and verifi
 * **Uniqueness:** Primary keys are enforced across all tables to prevent record duplication.
 * **Mapping:** The `InputRequests` table uses `VeridionID` as a Foreign Key, allowing for NULL values when a search query fails to find a match in the master database.
 
-## 🔍 Data Analysis & QC Observations (Task 2 & 3)
+## 🔍 Data Analysis & QC Observations
 During the project, I performed a deep-dive analysis using T-SQL to identify inconsistencies. Below are the findings:
 
 ### 1. Technical Integrity & Data Types
