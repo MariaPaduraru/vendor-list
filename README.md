@@ -42,6 +42,45 @@ The system uses the `VeridionID` as a bridge between messy input data and verifi
 * **Uniqueness:** Primary keys are enforced across all tables to prevent record duplication.
 * **Mapping:** The `InputRequests` table uses `VeridionID` as a Foreign Key, allowing for NULL values when a search query fails to find a match in the master database.
 
+## 🔍 Data Analysis & QC Observations (Task 2 & 3)
+During the project, I performed a deep-dive analysis using T-SQL to identify inconsistencies. Below are the findings:
+
+### 1. Technical Integrity & Data Types
+* **Issue:** Identified a **Varchar-to-Int Overflow** error in the `Revenue` column. High-value strings (e.g., `52,960,000,248`) exceeded standard integer limits.
+* **Solution:** Implemented `TRY_CAST` to `DECIMAL(38,0)` to ensure all financial data is calculable without system crashes.
+
+### 2. Missing Data Statistics
+After running a completeness audit on **2,716 total records**, I observed:
+* **Missing Revenue:** 1,276 records (47%).
+* **Missing Employee Count:** 1,192 records (44%).
+* **Missing Industry Classification:** 316 records (11%).
+
+### 3. Data Strengths
+* **Location Integrity:** 100% of the analyzed records have complete address data (City, Postcode, Street). No null or empty strings were found in critical address fields.
+* **Content Richness:** 100% of entities possess at least one form of text description (Short, Long, or Generated), ensuring no "empty profiles" exist.
+
+---
+
+## 🛠️ Data Curation Strategy
+To prepare this dataset for a production-level client delivery, I defined the following curation rules:
+
+1.  **Financial Normalization:** Convert all `Revenue` strings to a unified numeric format and apply "median-imputation" based on the `MainSector` for records with missing values.
+2.  **Geographical Standardization:** Use a **Cross-Reference validation** (mapping `CountryCode` to ISO Standard names) to correct discrepancies (e.g., ensuring 'US' always maps to 'United States').
+3.  **Entity Flattening:** For clients requiring a "one-row-per-company" view, filter locations to only export the record where `IsMainLocation = 'true'`.
+4.  **Fallback Logic:** In cases where `CompanyLegalName` is missing, the system is programmed to fall back to `CompanyName` to maintain record usability in CRM systems.
+
+---
+
+## 💻 SQL Scripts Used
+The following logic was applied (Full scripts available in the repository):
+
+* **Entity Relationship Check:** Verified that each company has exactly one main location using `SUM(CASE WHEN IsMainLocation = 'true'...)` and `HAVING` clauses.
+* **Completeness Audit:** Multi-column null/empty check with `COUNT_BIG` and `CAST AS BIGINT` for large-scale data handling.
+* **ISO Validation:** A CTE-based approach to cross-reference internal country names against global standards.
+* **Description Quality:** `LEN()` based filters to identify and flag poor-quality or placeholder descriptions (e.g., 'N/A').
+
+
+
 ## 🚀 Use Cases
 * **B2B Lead Enrichment:** Cleaning and expanding simple company names into full profiles.
 * **Supplier Risk Management:** Maintaining a single "Golden Record" for vendors.
